@@ -4,7 +4,7 @@ clean:
 	rm -f auditcalltree
 
 auditcalltree: auditcalltree.c
-	gcc -o auditcalltree auditcalltree.c -laudit
+	gcc -o auditcalltree auditcalltree.c main.c -laudit
 
 restart:
 	sudo chown root auditcalltree
