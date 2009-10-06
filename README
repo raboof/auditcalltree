@@ -1,0 +1,52 @@
+= Introduction =
+
+With Linux getting ever more advanced and complicated, it can be hard to 
+figure out which application is accessing a given file.
+
+== auditd ==
+
+Enter the linux 'audit' infrastructure: this package contains an 'auditd' to 
+do the actual auditing and some tools to specify which events must be audited:
+
+  http://people.redhat.com/sgrubb/audit/index.html
+
+== auditd limitations ==
+
+Unfortunately, the information provided by auditd is rather sparse. For 
+example, it does log which process triggered the audit event, but this 
+might be a generic tool like 'mv' called from some script or application.
+
+== what is auditcalltree? ==
+
+Fortunately, the auditd infrastructure allows us to easily plug in other
+dispatchers. 
+
+auditcalltree is a smple dispatcher that writes audit events to syslog, 
+including the process hierarchy leading up to the process performing the 
+audited action.
+
+= Compiling =
+
+make auditcalltree
+
+= Configuration =
+
+Edit /etc/audit/auditd.conf, and point 'dispatcher' to the auditcalltree 
+script.
+
+Restart auditd.
+
+= Example =
+
+As an example, I added 'write' auditing to /etc/resolv.conf, and 'touched' 
+this file from a bash shell in a screen session:
+
+Oct  6 15:10:56 mintzer auditcalltree[9321]: data="audit(1254834656.968:1944): arch=40000003 syscall=5 success=no exit=-13 a0=bffef2e5 a1=8941 a2=1b6 a3=8941 items=1 ppid=1225 pid=10138 auid=4294967295 uid=1000 gid=1000 euid=1000 suid=1000 fsuid=1000 egid=1000 sgid=1000 fsgid=1000 tty=pts6 ses=4294967295 comm="touch" exe="/bin/touch" key="dns""
+Oct  6 15:10:56 mintzer auditcalltree[9321]: pid 10138 (touch)
+Oct  6 15:10:56 mintzer auditcalltree[9321]: pid 10138 has parent 1225 (touch)
+Oct  6 15:10:56 mintzer auditcalltree[9321]: pid 1225 has parent 9421 (bash)
+Oct  6 15:10:56 mintzer auditcalltree[9321]: pid 9421 has parent 1 (screen)
+Oct  6 15:10:56 mintzer auditcalltree[9321]: type=1307, payload size=67
+Oct  6 15:10:56 mintzer auditcalltree[9321]: data="audit(1254834656.968:1944):  cwd="/home/arnouten/dev/auditcalltree""
+
+
